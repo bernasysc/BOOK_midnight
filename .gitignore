@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual environment
+venv/
+
+# Local databases
+*.db
+instance/
+
+# Datasets
+*.csv
+data/
+BooksDataset.csv
+
+# OS / editor files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+
+    <h1>{{ title }}</h1>
+    <div class="user-links">
+        <a href="{{ url_for('home') }}">Home</a> |
+        <a href="{{ url_for('profile') }}">Profile</a>
+    </div>
+
+    {% if recs %}
+    <div class="recommendations-grid">
+        {% for book, score, reasons in recs %}
+            <div class="book-card">
+                <a href="{{ url_for('book_detail', book_id=book.id) }}" class="book-link">
+                    <img src="{{ book.image_url if book.image_url else url_for('static', filename='no_image.png') }}" class="book-image" alt="{{ book.title }}">
+                    <h3>{{ book.title }}</h3>
+                    <p class="author">{{ book.authors }}</p>
+                </a>
+                <p class="rec-reason">Because you liked: {{ reasons|join(', ') }}</p>
+            </div>
+        {% endfor %}
+    </div>
+    {% else %}
+        <p>No recommendations available right now.</p>
+    {% endif %}
+
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Profile - Bookify</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-messages">
+          {% for category, message in messages %}
+            <div class="flash {{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <h1>👤 My Profile</h1>
+
+    <!-- Navigation links -->
+    <div class="user-links">
+        {% if session.username %}
+            Logged in as {{ session.username }} |
+            <a href="{{ url_for('home') }}">Home</a> |
+            <a href="{{ url_for('my_lists') }}">📋 My Lists</a> |
+            <a href="{{ url_for('logout') }}">Logout</a>
+        {% else %}
+            <a href="{{ url_for('login') }}">Login</a> |
+            <a href="{{ url_for('register') }}">Register</a>
+        {% endif %}
+    </div>
+
+    <!-- Account Section -->
+    <div class="profile-section">
+        <h2>Account Information</h2>
+        <div class="account-info">
+            <p><strong>Username:</strong> {{ user.username }}</p>
+            <a href="{{ url_for('edit_profile') }}" class="btn btn-primary">⚙️ Edit Profile</a>
+        </div>
+    </div>
+
+    <!-- Statistics Section -->
+    <div class="profile-section">
+        <h2>📚 Your Statistics</h2>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>❤️ Favorites</h3>
+                <p class="stat-number">{{ fav_count }}</p>
+            </div>
+            <div class="stat-card">
+                <h3>📚 Want to Read</h3>
+                <p class="stat-number">{{ want_count }}</p>
+            </div>
+            <div class="stat-card">
+                <h3>✅ Read</h3>
+                <p class="stat-number">{{ read_count }}</p>
+            </div>
+            <div class="stat-card">
+                <h3>📖 Diary Entries</h3>
+                <p class="stat-number">{{ diary_count }}</p>
+            </div>
+            <div class="stat-card">
+                <h3>📋 Custom Lists</h3>
+                <p class="stat-number">{{ list_count }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Activity Feed Section -->
+    <div class="profile-section">
+        <h2>🎯 Recent Activity</h2>
+        {% if activities %}
+            <div class="activity-feed">
+                {% for activity in activities %}
+                    <div class="activity-item">
+                        <p class="activity-time">{{ activity.timestamp.strftime('%d %B %Y at %H:%M') }}</p>
+                        <p class="activity-action">
+                            {% if activity.action == 'added_to_favorites' %}
+                                ❤️ Added <strong>{{ activity.book_title }}</strong> to Favorites
+                            {% elif activity.action == 'added_to_want_to_read' %}
+                                📚 Added <strong>{{ activity.book_title }}</strong> to Want to Read
+                            {% elif activity.action == 'marked_as_read' %}
+                                ✅ Marked <strong>{{ activity.book_title }}</strong> as Read
+                            {% elif activity.action == 'added_to_diary' %}
+                                📖 Added <strong>{{ activity.book_title }}</strong> to Diary
+                            {% elif activity.action == 'created_list' %}
+                                📋 Created list: <strong>{{ activity.list_name }}</strong>
+                            {% elif activity.action == 'updated_profile' %}
+                                ⚙️ Updated profile
+                            {% else %}
+                                {{ activity.action }}
+                            {% endif %}
+                        </p>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p>No activity yet. Start exploring books!</p>
+        {% endif %}
+    </div>
+
+</body>
+</html>

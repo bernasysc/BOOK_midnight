@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Want to Read - Bookify</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-messages">
+          {% for category, message in messages %}
+            <div class="flash {{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <h1>📚 Want to Read</h1>
+
+    <!-- Navigation links -->
+    <div class="user-links">
+        {% if session.username %}
+            Logged in as {{ session.username }} |
+            <a href="{{ url_for('home') }}">Home</a> |
+            <a href="{{ url_for('profile') }}">👤 Profile</a> |
+            <a href="{{ url_for('my_lists') }}">📋 My Lists</a> |
+            <a href="{{ url_for('logout') }}">Logout</a>
+        {% else %}
+            <a href="{{ url_for('login') }}">Login</a> |
+            <a href="{{ url_for('register') }}">Register</a>
+        {% endif %}
+    </div>
+
+    <!-- Want to Read list -->
+    <div class="book-list">
+        {% if books %}
+            {% for book in books %}
+                <div class="book-card">
+                    <img src="{{ book.image_url }}" alt="{{ book.title }}" class="book-image">
+                    <h3>{{ book.title }}</h3>
+                    <p><strong>Author:</strong> {{ book.authors }}</p>
+                    <p><strong>Category:</strong> {{ book.category }}</p>
+                    <p><strong>Publisher:</strong> {{ book.publisher }}</p>
+                    <p><strong>Price:</strong> {{ book.price }}</p>
+                    <p><strong>Publish Date:</strong> {{ book.publish_date }}</p>
+                    <p><strong>Description:</strong> {{ book.description }}</p>
+
+                    <!-- Remove from Want to Read button -->
+                    <a href="{{ url_for('remove_want', book_id=book.id) }}" class="fav-btn">❌ Remove</a>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>You have no books in your Want to Read list yet.</p>
+        {% endif %}
+    </div>
+
+</body>
+</html>

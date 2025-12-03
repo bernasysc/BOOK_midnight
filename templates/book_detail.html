@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ book.title }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+
+    <a href="{{ url_for('home') }}">← Back to list</a>
+
+    <div class="book-detail">
+        <img src="{{ book.image_url if book.image_url else url_for('static', filename='no_image.png') }}" 
+     alt="{{ book.title }}" 
+     class="book-image">
+        <h1>{{ book.title }}</h1>
+        <p><strong>Author:</strong> {{ book.authors }}</p>
+        
+        {% if book.average_rating %}
+        <p><strong>Rating:</strong> ⭐ {{ "%.1f"|format(book.average_rating) }}
+        {% if book.ratings_count %} ({{ book.ratings_count }} ratings){% endif %}</p>
+        {% endif %}
+        
+        <p><strong>Category:</strong> {{ book.category }}</p>
+        
+        {% if book.num_pages %}
+        <p><strong>Pages:</strong> {{ book.num_pages }}</p>
+        {% endif %}
+        
+        <p><strong>Publisher:</strong> {{ book.publisher }}</p>
+        <p><strong>Publish Date:</strong> {{ book.publish_date }}</p>
+        <p><strong>Price:</strong> {{ book.price }}</p>
+        
+        {% if book.is_bestseller and book.sales_millions %}
+        <p><strong>🏆 Best Seller:</strong> ~{{ book.sales_millions }}M copies sold</p>
+        {% endif %}
+        
+        <p><strong>Description:</strong> {{ book.description }}</p>
+
+        <!-- Action Buttons -->
+        {% if session.username %}
+            <div class="action-buttons">
+                <a href="{{ url_for('add_favorite', book_id=book.id) }}" class="fav-btn">❤️ Add to Favorites</a>
+                <a href="{{ url_for('add_want', book_id=book.id) }}" class="want-btn">📚 Want to Read</a>
+                <a href="{{ url_for('add_read', book_id=book.id) }}" class="read-btn">✅ Mark as Read</a>
+            </div>
+        {% else %}
+            <p><em>Login to add books to lists</em></p>
+        {% endif %}
+    </div>
+
+    <!-- Add to Custom Lists Section -->
+    {% if session.username %}
+    <div class="custom-lists-section">
+        <h3>📋 Add to Custom List</h3>
+        {% if custom_lists %}
+            <div class="custom-lists-buttons">
+                {% for custom_list in custom_lists %}
+                    <a href="{{ url_for('add_to_custom_list', book_id=book.id, list_id=custom_list.id) }}" class="btn btn-custom">+ {{ custom_list.name }}</a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p><a href="{{ url_for('create_list') }}">Create a custom list</a> to add books!</p>
+        {% endif %}
+    </div>
+
+    <!-- Add to Diary Section -->
+    <div class="diary-section">
+        <h3>📖 Add to Diary</h3>
+        <p>Track when you read this book</p>
+        <a href="{{ url_for('add_to_diary', book_id=book.id) }}" class="btn btn-diary">📖 Add to Diary</a>
+    </div>
+    {% endif %}
+
+    <!-- Similar Books Section -->
+    {% if similar_books %}
+    <div class="similar-books-section">
+        <h2>📖 Similar Books</h2>
+        <div class="book-list">
+            {% for sim_book in similar_books %}
+                <div class="book-card">
+                    <a href="{{ url_for('book_detail', book_id=sim_book.id) }}" class="book-link">
+                        <img src="{{ sim_book.image_url if sim_book.image_url else url_for('static', filename='no_image.png') }}" 
+                             alt="{{ sim_book.title }}" 
+                             class="book-image">
+                        <h3>{{ sim_book.title }}</h3>
+                        <p>{{ sim_book.authors }}</p>
+                    </a>
+
+                    {% if session.username %}
+                        <a href="{{ url_for('add_favorite', book_id=sim_book.id) }}" class="fav-btn">❤️ Add to Favorites</a>
+                        <a href="{{ url_for('add_want', book_id=sim_book.id) }}" class="want-btn">📚 Want to Read</a>
+                        <a href="{{ url_for('add_read', book_id=sim_book.id) }}" class="read-btn">✅ Mark as Read</a>
+                    {% else %}
+                        <span title="Login to add">❤️</span>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+</body>
+</html>

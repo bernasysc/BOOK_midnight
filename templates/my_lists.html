@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Lists - Bookify</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-messages">
+          {% for category, message in messages %}
+            <div class="flash {{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <h1>📋 My Lists</h1>
+
+    <!-- Navigation links -->
+    <div class="user-links">
+        {% if session.username %}
+            Logged in as {{ session.username }} |
+            <a href="{{ url_for('home') }}">Home</a> |
+            <a href="{{ url_for('profile') }}">👤 Profile</a> |
+            <a href="{{ url_for('logout') }}">Logout</a>
+        {% else %}
+            <a href="{{ url_for('login') }}">Login</a> |
+            <a href="{{ url_for('register') }}">Register</a>
+        {% endif %}
+    </div>
+
+    <!-- Create New List Button -->
+    <div class="create-list-btn">
+        <a href="{{ url_for('create_list') }}" class="btn btn-primary">➕ Create New List</a>
+        <a href="{{ url_for('view_diary') }}" class="btn btn-primary">📖 My Diary</a>
+    </div>
+
+    <!-- Built-in Lists Section -->
+    <div class="lists-section">
+        <h2>📚 Default Lists</h2>
+        <div class="list-grid">
+            <!-- Favorites -->
+            <div class="list-card">
+                <h3>❤️ Favorites</h3>
+                <p class="list-count">{{ fav_count }} book{{ 's' if fav_count != 1 else '' }}</p>
+                <a href="{{ url_for('view_favorites') }}" class="btn btn-secondary">View List</a>
+            </div>
+
+            <!-- Want to Read -->
+            <div class="list-card">
+                <h3>📚 Want to Read</h3>
+                <p class="list-count">{{ want_count }} book{{ 's' if want_count != 1 else '' }}</p>
+                <a href="{{ url_for('view_want_to_read') }}" class="btn btn-secondary">View List</a>
+            </div>
+
+            <!-- Read -->
+            <div class="list-card">
+                <h3>✅ Read</h3>
+                <p class="list-count">{{ read_count }} book{{ 's' if read_count != 1 else '' }}</p>
+                <a href="{{ url_for('view_read') }}" class="btn btn-secondary">View List</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Lists Section -->
+    {% if custom_lists %}
+    <div class="lists-section">
+        <h2>✨ Your Custom Lists</h2>
+        <div class="list-grid">
+            {% for custom_list in custom_lists %}
+            <div class="list-card">
+                <h3>{{ custom_list.name }}</h3>
+                {% if custom_list.description %}
+                    <p class="list-description">{{ custom_list.description }}</p>
+                {% endif %}
+                <p class="list-count">{{ custom_list.books|length }} book{{ 's' if custom_list.books|length != 1 else '' }}</p>
+                <div class="list-actions">
+                    <a href="{{ url_for('view_custom_list', list_id=custom_list.id) }}" class="btn btn-secondary">View List</a>
+                    <a href="{{ url_for('delete_list', list_id=custom_list.id) }}" class="btn btn-danger" onclick="return confirm('Delete this list?')">Delete</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <div class="lists-section">
+        <p>You haven't created any custom lists yet. <a href="{{ url_for('create_list') }}">Create one now!</a></p>
+    </div>
+    {% endif %}
+
+</body>
+</html>

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Recommend Books</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+
+    <h1>Recommend Books</h1>
+    <div class="user-links">
+        <a href="{{ url_for('home') }}">Home</a> |
+        <a href="{{ url_for('profile') }}">Profile</a>
+    </div>
+
+    <p>Choose how you'd like your recommendations generated:</p>
+
+    <div class="recommend-actions">
+        <a href="{{ url_for('recommend_from_diary') }}" class="btn btn-primary">🔮 From My Diary (last 5 entries)</a>
+        <a href="{{ url_for('recommend_from_favorites') }}" class="btn btn-secondary">✨ From My Favorites</a>
+    </div>
+
+    <p class="small">Tip: Add diary entries and favorites to improve personalization.</p>
+
+</body>
+</html>

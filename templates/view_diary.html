@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Diary - Bookify</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-messages">
+          {% for category, message in messages %}
+            <div class="flash {{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <h1>📖 My Reading Diary</h1>
+
+    <!-- Navigation links -->
+    <div class="user-links">
+        {% if session.username %}
+            Logged in as {{ session.username }} |
+            <a href="{{ url_for('home') }}">Home</a> |
+            <a href="{{ url_for('profile') }}">👤 Profile</a> |
+            <a href="{{ url_for('my_lists') }}">📋 My Lists</a> |
+            <a href="{{ url_for('logout') }}">Logout</a>
+        {% else %}
+            <a href="{{ url_for('login') }}">Login</a> |
+            <a href="{{ url_for('register') }}">Register</a>
+        {% endif %}
+    </div>
+
+    <!-- Diary Entries -->
+    <div class="diary-entries">
+        {% if entries %}
+            {% for entry in entries %}
+                <div class="diary-entry">
+                    <div class="entry-header">
+                        <h3>
+                            <a href="{{ url_for('book_detail', book_id=entry.book_id) }}">{{ entry.book.title }}</a>
+                        </h3>
+                        <p class="entry-date">
+                            📅 {{ entry.entry_date.strftime('%d %B %Y') }}
+                        </p>
+                    </div>
+
+                    <div class="entry-content">
+                        <p><strong>Author:</strong> {{ entry.book.authors }}</p>
+                        {% if entry.notes %}
+                            <div class="entry-notes">
+                                <p><strong>Notes:</strong></p>
+                                <p>{{ entry.notes }}</p>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="entry-actions">
+                        <a href="{{ url_for('book_detail', book_id=entry.book_id) }}" class="btn btn-secondary">View Book</a>
+                        <a href="{{ url_for('remove_diary_entry', entry_id=entry.id) }}" class="btn btn-danger" onclick="return confirm('Delete this entry?')">Delete Entry</a>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <p>📖 No diary entries yet.</p>
+                <p><a href="{{ url_for('home') }}">Browse books</a> and add entries to your diary!</p>
+            </div>
+        {% endif %}
+    </div>
+
+</body>
+</html>

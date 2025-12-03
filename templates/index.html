@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Bookify</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-messages">
+          {% for category, message in messages %}
+            <div class="flash {{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <h1>📚 Bookify</h1>
+
+    <!-- Login/logout links -->
+    <div class="user-links">
+        {% if session.username %}
+            Logged in as {{ session.username }} |
+            <a href="{{ url_for('profile') }}">👤 Profile</a> |
+            <a href="{{ url_for('my_lists') }}">📋 My Lists</a> |
+            <a href="{{ url_for('logout') }}">Logout</a>
+        {% else %}
+            <a href="{{ url_for('login') }}">Login</a> |
+            <a href="{{ url_for('register') }}">Register</a>
+        {% endif %}
+    </div>
+
+    <!-- Search / Filter form -->
+    <form method="GET" action="{{ url_for('home') }}">
+        <input type="text" name="search" placeholder="Search by title or author">
+        <select name="category">
+            <option value="">All Categories</option>
+            {% for c in categories %}
+                <option value="{{ c.category }}">{{ c.category }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit">Search / Filter</button>
+    </form>
+
+    <!-- Recommend button (under search bar) -->
+    <div class="recommend-home">
+        <a href="{{ url_for('recommend_hub') }}" class="btn btn-primary">🔮 Recommend Books</a>
+    </div>
+
+    <!-- Genre buttons (under search bar) -->
+    <div class="genre-buttons">
+        {% for genre in genres %}
+            <a href="{{ url_for('home', category=genre) }}" class="genre-button {% if category_filter==genre %}active{% endif %}">{{ genre }}</a>
+        {% endfor %}
+    </div>
+
+    {% if search_query or category_filter %}
+    <!-- Search / Filter Results shown immediately under the search bar -->
+    <div class="search-results">
+        <div class="search-header">
+            <div>
+                <h2>🔎 Results {% if search_query %}for "{{ search_query }}"{% endif %}{% if category_filter %}{% if search_query %} — {% else %}in {% endif %}<span class="filter-indicator">{{ category_filter }}</span>{% endif %}</h2>
+            </div>
+            <div>
+                <a href="{{ url_for('home') }}" class="clear-filters-btn">✕ Clear Filters</a>
+            </div>
+            <div class="result-count">{{ books|length }} result{{ 's' if books|length != 1 else '' }}</div>
+        </div>
+        <div class="book-list">
+        {% if books %}
+            {% for book in books %}
+            <div class="book-card">
+                <a href="{{ url_for('book_detail', book_id=book.id) }}" class="book-link">
+                    <img src="{{ book.image_url if book.image_url else url_for('static', filename='no_image.png') }}" 
+                         alt="{{ book.title }}" 
+                         class="book-image">
+                    <h3>{{ book.title }}</h3>
+                    <p class="author">{{ book.authors }}</p>
+                    {% if book.average_rating %}
+                    <p class="rating">⭐ {{ "%.1f"|format(book.average_rating) }}</p>
+                    {% endif %}
+                </a>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="no-results">No books found for this search.</div>
+        {% endif %}
+        </div>
+    </div>
+    {% else %}
+
+    <!-- Best Selling Books Section -->
+    {% if bestsellers %}
+    <div class="bestsellers-section">
+        <h2>🏆 Best Selling Books</h2>
+        <div class="book-list">
+        {% for book in bestsellers %}
+            <div class="book-card">
+                <!-- Clickable area -->
+                <a href="{{ url_for('book_detail', book_id=book.id) }}" class="book-link">
+                    <img src="{{ book.image_url if book.image_url else url_for('static', filename='no_image.png') }}" 
+                         alt="{{ book.title }}" 
+                         class="book-image">
+                    <h3>{{ book.title }}</h3>
+                    <p class="author">{{ book.authors }}</p>
+                    {% if book.average_rating %}
+                    <p class="rating">⭐ {{ "%.1f"|format(book.average_rating) }}</p>
+                    {% endif %}
+                </a>
+            </div>
+        {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- All Books Section -->
+    <div class="all-books-section">
+        <h2>📖 More Books</h2>
+        <!-- Book list -->
+        <div class="book-list">
+        {% for book in books %}
+            <div class="book-card">
+                <!-- Clickable area -->
+                <a href="{{ url_for('book_detail', book_id=book.id) }}" class="book-link">
+                    <img src="{{ book.image_url if book.image_url else url_for('static', filename='no_image.png') }}" 
+                         alt="{{ book.title }}" 
+                         class="book-image">
+                    <h3>{{ book.title }}</h3>
+                    <p class="author">{{ book.authors }}</p>
+                    {% if book.average_rating %}
+                    <p class="rating">⭐ {{ "%.1f"|format(book.average_rating) }}</p>
+                    {% endif %}
+                </a>
+            </div>
+        {% endfor %}
+        </div>
+    </div>
+
+    {% endif %}
+
+
+
+</body>
+</html>

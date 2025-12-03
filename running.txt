@@ -1,0 +1,27 @@
+1. installing ve: python -m venv venv
+
+2. activating ve: venv\Scripts\activate   
+
+3. installing frameworks, libraries: pip install flask pandas sqlalchemy flask_sqlalchemy
+optional to check: pip list 
+4. run the flask in activated ve: python app.py
+
+DATABASE
+1. delete the database in activated ve: del database.db
+
+2. recreating the database in python:  
+from app import app, db
+
+with app.app_context():
+    db.create_all()
+
+print("Database rebuilt with favorites!")
+
+exit()
+
+3. run in activated ve: python load_books.py
+4. run in activated ve: python app.py
+
+columns names in csv 
+['Title', 'Authors', 'Description', 'Category', 'Publisher', 'Publish Date', 'Price'],
+
