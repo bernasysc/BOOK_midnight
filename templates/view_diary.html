@@ -58,7 +58,6 @@
                     </div>
 
                     <div class="entry-actions">
-                        <a href="{{ url_for('book_detail', book_id=entry.book_id) }}" class="btn btn-secondary">View Book</a>
                         <a href="{{ url_for('remove_diary_entry', entry_id=entry.id) }}" class="btn btn-danger" onclick="return confirm('Delete this entry?')">Delete Entry</a>
                     </div>
                 </div>

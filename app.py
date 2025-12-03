@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
+from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
@@ -10,6 +11,19 @@ app.secret_key = "your_secret_key_here"  # Replace with a strong random key
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
+
+# Serializer for generating timed tokens for password reset
+serializer = URLSafeTimedSerializer(app.secret_key)
+
+
+def send_reset_email(destination, reset_url):
+    """Development helper: prints reset URL to server console.
+    If you configure SMTP server settings, replace this implementation to actually send email.
+    """
+    # In production: use SMTP or an email service (SendGrid/Mailgun) here.
+    print('\n[Password Reset] Sending reset link to:', destination)
+    print(reset_url)
+    print('')
 
 # -------------------- Helper Functions --------------------
 
@@ -154,8 +168,12 @@ def home():
     fav_ids = []
     if 'user_id' in session:
         fav_ids = [f.book_id for f in Favorite.query.filter_by(user_id=session['user_id']).all()]
+    # Recent diary entries for homepage (not a full list)
+    diary_entries = []
+    if 'user_id' in session:
+        diary_entries = BookDiary.query.filter_by(user_id=session['user_id']).order_by(BookDiary.entry_date.desc()).limit(5).all()
 
-    return render_template('index.html', books=books, categories=categories, bestsellers=bestsellers, fav_ids=fav_ids, search_query=search_query, category_filter=category_filter, genres=genres)
+    return render_template('index.html', books=books, categories=categories, bestsellers=bestsellers, fav_ids=fav_ids, search_query=search_query, category_filter=category_filter, genres=genres, diary_entries=diary_entries)
 
 # -------------------- User Authentication --------------------
 
@@ -197,6 +215,81 @@ def login():
             return redirect(url_for('login'))
 
     return render_template('login.html')
+
+
+@app.route('/forgot_password', methods=['GET', 'POST'])
+def forgot_password():
+    if request.method == 'POST':
+        identifier = request.form.get('identifier', '').strip()
+
+        # The app currently stores only username, not email. We accept username here.
+        user = User.query.filter_by(username=identifier).first()
+        if not user:
+            # If user doesn't exist, show generic message to avoid leaking usernames
+            flash('If an account with that username exists, you will be redirected to reset the password.', 'info')
+            return redirect(url_for('login'))
+
+        # User exists — redirect directly to the reset page for that username.
+        # NOTE: This bypasses email verification intentionally per user request.
+        return redirect(url_for('reset_direct', username=user.username))
+
+    return render_template('forgot_password.html')
+
+
+@app.route('/reset_password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    try:
+        data = serializer.loads(token, salt='password-reset-salt', max_age=86400)  # 24 hours
+        user_id = data.get('user_id')
+    except SignatureExpired:
+        flash('This reset link has expired. Please request a new one.', 'error')
+        return redirect(url_for('forgot_password'))
+    except BadSignature:
+        flash('Invalid reset token. Please request a new password reset.', 'error')
+        return redirect(url_for('forgot_password'))
+
+    user = User.query.get(user_id)
+    if not user:
+        flash('Invalid user. Please request a new password reset.', 'error')
+        return redirect(url_for('forgot_password'))
+
+    if request.method == 'POST':
+        new_password = request.form.get('password', '').strip()
+        confirm = request.form.get('confirm_password', '').strip()
+        if not new_password or new_password != confirm:
+            flash('Passwords do not match or are empty.', 'error')
+            return redirect(url_for('reset_password', token=token))
+
+        user.password = generate_password_hash(new_password)
+        db.session.commit()
+        flash('Password updated successfully. Please log in with your new password.', 'success')
+        return redirect(url_for('login'))
+
+    return render_template('reset_password.html', token=token)
+
+
+@app.route('/reset_direct/<username>', methods=['GET', 'POST'])
+def reset_direct(username):
+    # Direct username-based reset (no email). This will immediately allow a password change
+    # for the given username if it exists. Use with caution — this reveals account existence.
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        flash('Invalid username. Please request a password reset again.', 'error')
+        return redirect(url_for('forgot_password'))
+
+    if request.method == 'POST':
+        new_password = request.form.get('password', '').strip()
+        confirm = request.form.get('confirm_password', '').strip()
+        if not new_password or new_password != confirm:
+            flash('Passwords do not match or are empty.', 'error')
+            return redirect(url_for('reset_direct', username=username))
+
+        user.password = generate_password_hash(new_password)
+        db.session.commit()
+        flash('Password updated successfully. Please log in with your new password.', 'success')
+        return redirect(url_for('login'))
+
+    return render_template('reset_direct.html', username=username)
 
 
 @app.route('/logout')
@@ -359,15 +452,25 @@ def my_lists():
         return redirect(url_for('login'))
 
     custom_lists = CustomList.query.filter_by(user_id=session['user_id']).all()
-    fav_count = Favorite.query.filter_by(user_id=session['user_id']).count()
-    want_count = WantToRead.query.filter_by(user_id=session['user_id']).count()
-    read_count = AlreadyRead.query.filter_by(user_id=session['user_id']).count()
+    fav_books = [f.book for f in Favorite.query.filter_by(user_id=session['user_id']).all()]
+    want_books = [e.book for e in WantToRead.query.filter_by(user_id=session['user_id']).all()]
+    read_books = [e.book for e in AlreadyRead.query.filter_by(user_id=session['user_id']).all()]
+    fav_count = len(fav_books)
+    want_count = len(want_books)
+    read_count = len(read_books)
+    
+    # Get active tab from query parameter, default to 'favorites'
+    active_tab = request.args.get('tab', 'favorites')
 
     return render_template('my_lists.html', 
                           custom_lists=custom_lists,
+                          fav_books=fav_books,
+                          want_books=want_books,
+                          read_books=read_books,
                           fav_count=fav_count,
                           want_count=want_count,
-                          read_count=read_count)
+                          read_count=read_count,
+                          active_tab=active_tab)
 
 
 @app.route('/create_list', methods=['GET', 'POST'])

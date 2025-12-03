@@ -25,6 +25,7 @@
             Logged in as {{ session.username }} |
             <a href="{{ url_for('profile') }}">👤 Profile</a> |
             <a href="{{ url_for('my_lists') }}">📋 My Lists</a> |
+            <a href="{{ url_for('view_diary') }}">📓 My Diary</a> |
             <a href="{{ url_for('logout') }}">Logout</a>
         {% else %}
             <a href="{{ url_for('login') }}">Login</a> |
@@ -48,6 +49,8 @@
     <div class="recommend-home">
         <a href="{{ url_for('recommend_hub') }}" class="btn btn-primary">🔮 Recommend Books</a>
     </div>
+
+    
 
     <!-- Genre buttons (under search bar) -->
     <div class="genre-buttons">

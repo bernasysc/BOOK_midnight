@@ -594,3 +594,55 @@ mark {
         align-items: flex-start;
     }
 }
+
+/* -------------------- Compact Diary on Homepage -------------------- */
+.diary-home-section {
+    max-width: 1100px;
+    margin: 12px auto;
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 2px 8px rgba(0, 74, 143, 0.06);
+}
+
+.diary-home-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.diary-card {
+    background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+    border: 1px solid rgba(0, 74, 143, 0.05);
+    padding: 12px;
+    border-radius: 8px;
+}
+
+.diary-card h4 {
+    margin: 0 0 6px 0;
+    color: #004a8f;
+    font-size: 1em;
+}
+
+.diary-date {
+    font-size: 0.85em;
+    color: #666;
+    margin: 6px 0;
+}
+
+.diary-notes {
+    color: #444;
+    font-size: 0.95em;
+    margin: 0;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+}
+
+@media (max-width: 768px) {
+    .diary-home-grid {
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    }
+}

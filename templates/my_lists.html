@@ -3,6 +3,157 @@
 <head>
     <title>My Lists - Bookify</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        /* Tab navigation */
+        .tabs-nav {
+            display: flex;
+            gap: 0;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #cfe8ff;
+        }
+        
+        .tab-button {
+            padding: 12px 18px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: #004a8f;
+            font-weight: 600;
+            font-size: 0.95em;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .tab-button:hover {
+            background: #f5f7fa;
+            border-bottom-color: #cfe8ff;
+        }
+        
+        .tab-button.active {
+            border-bottom-color: #004a8f;
+            color: #004a8f;
+        }
+        
+        /* Tab content */
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* List grid */
+        .list-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-top: 12px;
+        }
+        
+        .book-card-list {
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s;
+        }
+        
+        .book-card-list:hover {
+            box-shadow: 0 4px 12px rgba(0, 74, 143, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .book-card-list img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+        }
+        
+        .book-card-list-content {
+            padding: 10px;
+        }
+        
+        .book-card-list h4 {
+            margin: 0 0 4px 0;
+            font-size: 0.85em;
+            color: #004a8f;
+            line-height: 1.2;
+        }
+        
+        .book-card-list p {
+            margin: 4px 0;
+            font-size: 0.85em;
+            color: #666;
+        }
+        
+        .book-card-list-actions {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+        }
+        
+        .book-card-list-actions a {
+            flex: 1;
+            padding: 6px 8px;
+            text-align: center;
+            text-decoration: none;
+            font-size: 0.8em;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        
+        .view-btn {
+            background: #e3f2fd;
+            color: #004a8f;
+        }
+        
+        .view-btn:hover {
+            background: #bbdefb;
+        }
+        
+        .remove-btn {
+            background: #ffebee;
+            color: #d32f2f;
+        }
+        
+        .remove-btn:hover {
+            background: #ffcdd2;
+        }
+        
+        .empty-message {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+        
+        .list-section-title {
+            margin: 20px 0 12px 0;
+            font-size: 1em;
+            color: #333;
+            font-weight: 600;
+        }
+        
+        @media (max-width: 768px) {
+            .tabs-nav {
+                gap: 4px;
+            }
+            
+            .tab-button {
+                padding: 10px 12px;
+                font-size: 0.85em;
+            }
+            
+            .list-grid {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                gap: 12px;
+            }
+        }
+    </style>
 </head>
 <body>
 
@@ -25,6 +176,7 @@
             Logged in as {{ session.username }} |
             <a href="{{ url_for('home') }}">Home</a> |
             <a href="{{ url_for('profile') }}">👤 Profile</a> |
+            <a href="{{ url_for('view_diary') }}">📓 My Diary</a> |
             <a href="{{ url_for('logout') }}">Logout</a>
         {% else %}
             <a href="{{ url_for('login') }}">Login</a> |
@@ -35,59 +187,138 @@
     <!-- Create New List Button -->
     <div class="create-list-btn">
         <a href="{{ url_for('create_list') }}" class="btn btn-primary">➕ Create New List</a>
-        <a href="{{ url_for('view_diary') }}" class="btn btn-primary">📖 My Diary</a>
     </div>
 
-    <!-- Built-in Lists Section -->
-    <div class="lists-section">
-        <h2>📚 Default Lists</h2>
-        <div class="list-grid">
-            <!-- Favorites -->
-            <div class="list-card">
-                <h3>❤️ Favorites</h3>
-                <p class="list-count">{{ fav_count }} book{{ 's' if fav_count != 1 else '' }}</p>
-                <a href="{{ url_for('view_favorites') }}" class="btn btn-secondary">View List</a>
-            </div>
-
-            <!-- Want to Read -->
-            <div class="list-card">
-                <h3>📚 Want to Read</h3>
-                <p class="list-count">{{ want_count }} book{{ 's' if want_count != 1 else '' }}</p>
-                <a href="{{ url_for('view_want_to_read') }}" class="btn btn-secondary">View List</a>
-            </div>
-
-            <!-- Read -->
-            <div class="list-card">
-                <h3>✅ Read</h3>
-                <p class="list-count">{{ read_count }} book{{ 's' if read_count != 1 else '' }}</p>
-                <a href="{{ url_for('view_read') }}" class="btn btn-secondary">View List</a>
-            </div>
-        </div>
+    <!-- Tab Navigation -->
+    <div class="tabs-nav">
+        <a href="?tab=favorites" class="tab-button {% if active_tab == 'favorites' %}active{% endif %}">❤️ Favorites ({{ fav_count }})</a>
+        <a href="?tab=want_to_read" class="tab-button {% if active_tab == 'want_to_read' %}active{% endif %}">📚 Want to Read ({{ want_count }})</a>
+        <a href="?tab=read" class="tab-button {% if active_tab == 'read' %}active{% endif %}">✅ Read ({{ read_count }})</a>
+        {% if custom_lists %}
+        <a href="?tab=custom" class="tab-button {% if active_tab == 'custom' %}active{% endif %}">✨ Custom Lists</a>
+        {% endif %}
     </div>
 
-    <!-- Custom Lists Section -->
-    {% if custom_lists %}
-    <div class="lists-section">
-        <h2>✨ Your Custom Lists</h2>
-        <div class="list-grid">
-            {% for custom_list in custom_lists %}
-            <div class="list-card">
-                <h3>{{ custom_list.name }}</h3>
-                {% if custom_list.description %}
-                    <p class="list-description">{{ custom_list.description }}</p>
-                {% endif %}
-                <p class="list-count">{{ custom_list.books|length }} book{{ 's' if custom_list.books|length != 1 else '' }}</p>
-                <div class="list-actions">
-                    <a href="{{ url_for('view_custom_list', list_id=custom_list.id) }}" class="btn btn-secondary">View List</a>
-                    <a href="{{ url_for('delete_list', list_id=custom_list.id) }}" class="btn btn-danger" onclick="return confirm('Delete this list?')">Delete</a>
+    <!-- Favorites Tab -->
+    <div class="tab-content {% if active_tab == 'favorites' %}active{% endif %}">
+        <h2>❤️ Favorites</h2>
+        {% if fav_books %}
+            <div class="list-grid">
+                {% for book in fav_books %}
+                <div class="book-card-list">
+                    <img src="{{ book.image_url if book.image_url else url_for('static', filename='no_image.png') }}" 
+                         alt="{{ book.title }}">
+                    <div class="book-card-list-content">
+                        <h4>{{ book.title }}</h4>
+                        <p><strong>{{ book.authors }}</strong></p>
+                        <div class="book-card-list-actions">
+                            <a href="{{ url_for('book_detail', book_id=book.id) }}" class="view-btn">View</a>
+                            <a href="{{ url_for('remove_favorite', book_id=book.id) }}" class="remove-btn" onclick="return confirm('Remove from favorites?')">Remove</a>
+                        </div>
+                    </div>
                 </div>
+                {% endfor %}
             </div>
-            {% endfor %}
-        </div>
+        {% else %}
+            <div class="empty-message">
+                <p>No books in your favorites yet.</p>
+                <p><a href="{{ url_for('home') }}">Browse books →</a></p>
+            </div>
+        {% endif %}
     </div>
-    {% else %}
-    <div class="lists-section">
-        <p>You haven't created any custom lists yet. <a href="{{ url_for('create_list') }}">Create one now!</a></p>
+
+    <!-- Want to Read Tab -->
+    <div class="tab-content {% if active_tab == 'want_to_read' %}active{% endif %}">
+        <h2>📚 Want to Read</h2>
+        {% if want_books %}
+            <div class="list-grid">
+                {% for book in want_books %}
+                <div class="book-card-list">
+                    <img src="{{ book.image_url if book.image_url else url_for('static', filename='no_image.png') }}" 
+                         alt="{{ book.title }}">
+                    <div class="book-card-list-content">
+                        <h4>{{ book.title }}</h4>
+                        <p><strong>{{ book.authors }}</strong></p>
+                        <div class="book-card-list-actions">
+                            <a href="{{ url_for('book_detail', book_id=book.id) }}" class="view-btn">View</a>
+                            <a href="{{ url_for('remove_want', book_id=book.id) }}" class="remove-btn" onclick="return confirm('Remove from Want to Read?')">Remove</a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-message">
+                <p>No books in your Want to Read list yet.</p>
+                <p><a href="{{ url_for('home') }}">Browse books →</a></p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Read Tab -->
+    <div class="tab-content {% if active_tab == 'read' %}active{% endif %}">
+        <h2>✅ Read</h2>
+        {% if read_books %}
+            <div class="list-grid">
+                {% for book in read_books %}
+                <div class="book-card-list">
+                    <img src="{{ book.image_url if book.image_url else url_for('static', filename='no_image.png') }}" 
+                         alt="{{ book.title }}">
+                    <div class="book-card-list-content">
+                        <h4>{{ book.title }}</h4>
+                        <p><strong>{{ book.authors }}</strong></p>
+                        <div class="book-card-list-actions">
+                            <a href="{{ url_for('book_detail', book_id=book.id) }}" class="view-btn">View</a>
+                            <a href="{{ url_for('remove_read', book_id=book.id) }}" class="remove-btn" onclick="return confirm('Remove from Read list?')">Remove</a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-message">
+                <p>No books marked as read yet.</p>
+                <p><a href="{{ url_for('home') }}">Browse books →</a></p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Custom Lists Tab -->
+    {% if custom_lists %}
+    <div class="tab-content {% if active_tab == 'custom' %}active{% endif %}">
+        <h2>✨ Your Custom Lists</h2>
+        {% for custom_list in custom_lists %}
+        <div class="list-section-title">{{ custom_list.name }}
+            {% if custom_list.description %}
+                <span style="font-weight: normal; color: #666; font-size: 0.9em;"> — {{ custom_list.description }}</span>
+            {% endif %}
+            <span style="float: right; font-size: 0.9em;">
+                <a href="{{ url_for('delete_list', list_id=custom_list.id) }}" 
+                   style="color: #d32f2f; text-decoration: none;"
+                   onclick="return confirm('Delete this list?')">Delete</a>
+            </span>
+        </div>
+        {% if custom_list.books %}
+            <div class="list-grid">
+                {% for lb in custom_list.books %}
+                <div class="book-card-list">
+                    <img src="{{ lb.book.image_url if lb.book.image_url else url_for('static', filename='no_image.png') }}" 
+                         alt="{{ lb.book.title }}">
+                    <div class="book-card-list-content">
+                        <h4>{{ lb.book.title }}</h4>
+                        <p><strong>{{ lb.book.authors }}</strong></p>
+                        <div class="book-card-list-actions">
+                            <a href="{{ url_for('book_detail', book_id=lb.book.id) }}" class="view-btn">View</a>
+                            <a href="{{ url_for('remove_from_list', list_id=custom_list.id, book_id=lb.book.id) }}" class="remove-btn">Remove</a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p style="color: #999; margin: 12px 0;">No books in this list yet.</p>
+        {% endif %}
+        {% endfor %}
     </div>
     {% endif %}
 

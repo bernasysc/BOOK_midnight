@@ -3,6 +3,17 @@
 <head>
     <title>Edit Profile - Bookify</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        /* Local form layout: stack fields vertically and place actions below */
+        .form-container { display: flex; justify-content: center; }
+        .edit-profile-form { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 420px; }
+        .edit-profile-form .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .edit-profile-form input[type="text"],
+        .edit-profile-form input[type="password"] { width: 100%; padding: 10px; }
+        .form-actions { display: flex; gap: 10px; margin-top: 6px; }
+        .form-actions .btn { padding: 10px 14px; }
+        @media (max-width: 480px) { .edit-profile-form { max-width: 100%; padding: 0 10px; } }
+    </style>
 </head>
 <body>
 
